@@ -5,6 +5,7 @@ int main(int argc, char *argv[]){
 
     if(!glfwInit()){
 	std::cout << "meow";
+    glfwTerminate();
     } else {
 	std::cout<<"meow2";
     }
