@@ -3,6 +3,9 @@
 
 void error_callback(int error, const char* description);
 
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+
 const int width = 640;
 const int height = 480;
 
@@ -14,8 +17,8 @@ int main(int argc, char *argv[]){
 
 	    std::cout << "glfw Initialisation failed";
         glfwTerminate();
-
     } else {
+
 
 	    std::cout<<"glfw init sucessful yoohoo! \n";
 
@@ -30,6 +33,20 @@ int main(int argc, char *argv[]){
         } else {
             std::cout << "window failed to open";
         }
+        glfwMakeContextCurrent(window);
+
+        glViewport(0, 0, width, height);
+
+        glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+
+        while(!glfwWindowShouldClose(window))
+        {
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+        }
+
+
 
     }
 
@@ -37,4 +54,9 @@ int main(int argc, char *argv[]){
 
 void error_callback(int error, const char* description){
     std::cerr << "Error: " << description << "\n";
+}
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
 }
