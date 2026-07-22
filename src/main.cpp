@@ -1,5 +1,4 @@
 #include <GLFW/glfw3.h>
-#include <cstdio>
 #include <iostream>
 
 void error_callback(int error, const char* description);
@@ -18,14 +17,14 @@ int main(int argc, char *argv[]){
 
     } else {
 
-	    std::cout<<"glfw init sucessful yoohoo!";
+	    std::cout<<"glfw init sucessful yoohoo! \n";
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-        GLFWwindow* window = glfwCreateWindow(width, height, "Yo!", NULL, NULL);
-        if(window != NULL)
+        GLFWwindow* window = glfwCreateWindow(width, height, "Yo!", nullptr, nullptr);
+        if(window != nullptr)
         {
             std::cout << "window created successfully";
         } else {
