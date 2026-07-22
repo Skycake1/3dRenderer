@@ -4,11 +4,14 @@
 
 void error_callback(int error, const char* description);
 
+const int width = 640;
+const int height = 480;
+
 int main(int argc, char *argv[]){
 
     glfwSetErrorCallback(error_callback);
 
-    if(!glfwInit()){
+    if(glfwInit() == 0){
 
 	    std::cout << "glfw Initialisation failed";
         glfwTerminate();
@@ -20,17 +23,19 @@ int main(int argc, char *argv[]){
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        
-        GLFWwindow* window = glfwCreateWindow(640, 480, "Yo!", NULL, NULL);
-        if(!window)
+
+        GLFWwindow* window = glfwCreateWindow(width, height, "Yo!", NULL, NULL);
+        if(window != NULL)
         {
+            std::cout << "window created successfully";
+        } else {
             std::cout << "window failed to open";
         }
-    
+
     }
 
 }
 
 void error_callback(int error, const char* description){
-    fprintf(stderr, "Error: %s\n", description);
+    std::cerr << "Error: " << description << "\n";
 }
