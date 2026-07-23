@@ -29,13 +29,12 @@ int main(int argc, char *argv[]){
 
 	    std::cout<<"glfw init sucessful yoohoo! \n";
 
-
-
-
+        //window hint functionally act as little settings for the window
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+        //this creates a pointer to our window and then checks if the window was created correctly
         GLFWwindow* window = glfwCreateWindow(width, height, "Yo!", nullptr, nullptr);
         if(window != nullptr)
         {
@@ -44,9 +43,10 @@ int main(int argc, char *argv[]){
             std::cout << "window failed to open";
         }
 
-
+        //makes glfw look at our current context
         glfwMakeContextCurrent(window);
 
+        //Initialise glad so that way you can do cross platform stuff with opengl
          if(!initGlad())
         {
             std::cout << "Failed to initialize GLAD" << std::endl;
@@ -54,11 +54,12 @@ int main(int argc, char *argv[]){
             return -1;
         }
 
+        //basically our canvas size, and we want it to be the same as the window size
         glViewport(0, 0, width, height);
-
+        //which is why we setup our callback function right here
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-
+        //has window open basically
         while(!glfwWindowShouldClose(window))
         {
             glfwSwapBuffers(window);
@@ -67,6 +68,8 @@ int main(int argc, char *argv[]){
 
 
 
+        glfwTerminate();
+        return 0;
     }
 
 }
