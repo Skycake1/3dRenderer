@@ -8,6 +8,7 @@ void error_callback(int error, const char* description);
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 bool initGlad();
+void processInput(GLFWwindow *window);
 
 const int width = 640;
 const int height = 480;
@@ -59,9 +60,18 @@ int main(int argc, char *argv[]){
         //which is why we setup our callback function right here
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-        //has window open basically
+
+        //Render Loop
         while(!glfwWindowShouldClose(window))
         {
+            //input
+            processInput(window);
+
+            //Rendering Commands Here
+            glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            //check and call events and swap buffers
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
@@ -91,4 +101,11 @@ bool initGlad(){
     } else {
     return true;
     }
+}
+
+
+void processInput(GLFWwindow *window)
+{
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
 }
