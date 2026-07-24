@@ -5,7 +5,6 @@
 
 void error_callback(int error, const char* description);
 
-
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
 bool initGlad();
@@ -14,11 +13,12 @@ void processInput(GLFWwindow *window);
 const int width = 640;
 const int height = 480;
 
-
-
 unsigned int vertexShader;
+unsigned int fragmentShader;
+unsigned int shaderProgram;
 
 
+// These 2 will later disappear and become seperate files
 const char *vertexShaderSource = "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
     "void main()\n"
@@ -36,17 +36,18 @@ const char *fragmentShaderSource = "#version 330 core \n"
 
 
 
-
 int main(int argc, char *argv[]){
 
-    glfwSetErrorCallback(error_callback);
 
+
+    glfwSetErrorCallback(error_callback);
 
 
     if(glfwInit() == 0){
 
 	    std::cout << "glfw Initialisation failed";
         glfwTerminate();
+
     } else {
 
 	    std::cout<<"glfw init sucessful yoohoo! \n";
@@ -106,7 +107,6 @@ int main(int argc, char *argv[]){
 
             //fragment shader-------------------------------------------------------------------
 
-                unsigned int fragmentShader;
                 fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
                 glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
                 glCompileShader(fragmentShader);
@@ -125,7 +125,6 @@ int main(int argc, char *argv[]){
 
         //shader program(basically linking these the fragment and vertex shader together)
 
-            unsigned int shaderProgram;
             shaderProgram = glCreateProgram();
 
             glAttachShader(shaderProgram, vertexShader);
@@ -165,11 +164,9 @@ int main(int argc, char *argv[]){
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 
-        //basically a rough explanation of the vertexes that we are tossing in
+        //basically a rough explanation of the vertexes that we are tossing in (size of the vertices, what type and if they are normalised)
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
-
-
 
 
         //Render Loop
@@ -181,11 +178,13 @@ int main(int argc, char *argv[]){
             //Rendering Commands Here
             glUseProgram(shaderProgram);
 
-
+            //clear colour goes first because otheriwse it covers the screen
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT);
 
+
             glBindVertexArray(VAO);
+
 
             glDrawArrays(GL_TRIANGLES, 0, 3);
 
