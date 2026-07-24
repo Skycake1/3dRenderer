@@ -6,9 +6,9 @@ This is a simple little project that mainly exists so I can learn how to use ope
 
 
 Todo List: 
-- Add Vertex Shader
-- Add Geometry Shader
-- Add Fragment Shader
-- Render a lil baby triangle
+- ~~Add Vertex Shader~~
+- ~~Add Geometry Shader~~
+- ~~Add Fragment Shader~~
+- ~~Render a lil baby triangle~~
 
 
