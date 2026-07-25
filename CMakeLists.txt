@@ -11,9 +11,9 @@ find_package(glfw3 REQUIRED)
 add_executable(3dRenderer
     src/main.cpp
     src/glad.c
-
 )
 
 target_include_directories(3dRenderer PRIVATE dependencies)
+target_include_directories(3dRenderer PUBLIC headers)
 
 target_link_libraries(3dRenderer glfw OpenGL::GL)
