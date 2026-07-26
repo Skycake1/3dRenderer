@@ -8,6 +8,9 @@
 #include <custom/shaderClass.h>
 #include <filesystem>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <STB/stb_image.h>
+
 
 void error_callback(int error, const char* description);
 
@@ -99,6 +102,12 @@ int main(int argc, char *argv[]){
 
         };
 
+        const float textCoords[] = {
+               0.0f, 0.0f,  // lower-left corner
+               1.0f, 0.0f,  // lower-right corner
+               0.5f, 1.0f   // top-center corner
+        };
+
 
 
 
@@ -128,6 +137,37 @@ int main(int argc, char *argv[]){
         glEnableVertexAttribArray(1);
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        //textures
+        //-------------------------------------------------------------------------------
+
+        //set our parameters for texture loading
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        int width, height, nrChannels;
+        unsigned char *data = stbi_load((currentPath + "assets/wall.jpg").c_str(), &width, &height, &nrChannels, 0);
+
+        //generate and bind texture
+        unsigned int texture;
+        glGenTextures(1,&texture);
+        glBindTexture(GL_TEXTURE_2D, texture);
+
+        //actually generate the texture and make its mipmap
+        if(data){
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        } else {
+            std::cout << "Texture failed to load";
+        }
+        stbi_image_free(data);
+
+
+
+        //---------------------------------------------------------------------------------------
         //Render Loop
         while(!glfwWindowShouldClose(window))
         {
@@ -136,20 +176,24 @@ int main(int argc, char *argv[]){
 
             //Rendering Commands Here
 
+            float time = glfwGetTime();
+            float xOffset = sin(time)/2;
+            float yOffset = cos(time)/2;
+            float zOffset = 0;
+
+            ourShader.setFloat("xOffset", xOffset);
+            ourShader.setFloat("yOffset", yOffset);
+            ourShader.setFloat("zOffset", zOffset);
+
             ourShader.use();
 
-            float timeValue = glfwGetTime();
-            float greenValue = std::sin(timeValue)/2+0.5;
-            float redValue = 0;
-            float blueValue = std::cos(timeValue)/2+0.5;
-            int vertexColorLocation = glGetUniformLocation(ourShader.shaderProgramID,"ourColor");
-            glUniform4f(vertexColorLocation,redValue,greenValue,blueValue,1.0f);
+
 
             //clear colour goes first because otheriwse it covers the screen
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT);
 
-             glBindVertexArray(VAO);
+            glBindVertexArray(VAO);
             glDrawArrays(GL_TRIANGLES, 0, 3);
 
 
