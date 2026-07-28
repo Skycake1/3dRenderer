@@ -160,55 +160,14 @@ int main(int argc, char *argv[]){
 
         //set our parameters for texture loading
 
-
         int width, height, nrChannels;
-        unsigned char *data = stbi_load((currentPath + "assets/container.jpg").c_str(), &width, &height, &nrChannels, 0);
 
+        Texture2D container(width,height,nrChannels,0,(currentPath + "assets/container.jpg"));
+        container.initTexture(GL_MIRRORED_REPEAT, GL_RGB);
 
-            //generate and bind texture
-            unsigned int texture,texture2;
-            glGenTextures(1,&texture);
-            glBindTexture(GL_TEXTURE_2D, texture);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            //actually generate the texture and make its mipmap
-            if(data){
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            } else {
-                std::cout << "Texture failed to load";
-            }
-            stbi_image_free(data);
-
-            stbi_set_flip_vertically_on_load(true);
-            data = stbi_load((currentPath + "assets/awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
-
-            //Generate and bind texture 2
-
-            glGenTextures(1, &texture2);
-            glBindTexture(GL_TEXTURE_2D, texture2);
-            // set the texture wrapping parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            // set texture filtering parameters
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-
-        if (data)
-        {
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-        } else {
-            std::cout << "Texture2 failed to load";
-        }
-            stbi_image_free(data);
-
+        Texture2D awesomeFace(width,height,nrChannels,0,(currentPath + "assets/awesomeface.png"));
+        stbi_set_flip_vertically_on_load(true);
+        awesomeFace.initTexture(GL_REPEAT, GL_RGBA);
 
 
         // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
@@ -261,12 +220,8 @@ int main(int argc, char *argv[]){
 
             glUniform1f(glGetUniformLocation(ourShader.shaderProgramID,"meow"),opacity);
 
-            glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
-            glBindTexture(GL_TEXTURE_2D, texture);
-
-
-            glActiveTexture(GL_TEXTURE1); // activate the texture unit first before binding texture
-            glBindTexture(GL_TEXTURE_2D, texture2);
+            container.useTexture(GL_TEXTURE0);
+            awesomeFace.useTexture(GL_TEXTURE1);
 
             glBindVertexArray(VAO);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

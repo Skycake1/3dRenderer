@@ -14,9 +14,11 @@ class Texture2D{
     public:
         int height,width,nrChannels,reqComp;
         std::string filePath;
+        unsigned char *data;
+        unsigned int texture;
 
 
-        Texture2D(int height, int width, int nrChannels, int reqComp, std::string filePath){
+        Texture2D(int width, int height, int nrChannels, int reqComp, std::string filePath){
 
             this->height = height;
             this->width = width;
@@ -24,24 +26,39 @@ class Texture2D{
             this->reqComp = reqComp;
             this->filePath = filePath;
 
-            unsigned char *data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, reqComp);
+        }
+
+        void initTexture(unsigned int edgecontrol, unsigned int internalFormat){
+            data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, reqComp);
+
+            genTextures();
+            setTexParameters(edgecontrol);
+            genMipmaps(internalFormat);
+
+        }
 
 
+        void genTextures(){
             //generate and bind texture
-            unsigned int texture;
             glGenTextures(1,&texture);
             glBindTexture(GL_TEXTURE_2D, texture);
+        }
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+        void setTexParameters(unsigned int edgecontrol){
+            //set the texture parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, edgecontrol);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, edgecontrol);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        }
+
+        void genMipmaps(unsigned int internalFormat){
             //actually generate the texture and make its mipmap
             if(data){
-                //make sure to implement some way to either automatically detect for GL_RBGA or GL_RGB
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+
+            glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, data);
             glGenerateMipmap(GL_TEXTURE_2D);
 
             } else {
@@ -49,6 +66,11 @@ class Texture2D{
             }
 
             stbi_image_free(data);
+        }
+
+        void useTexture(int textureUnit){
+            glActiveTexture(textureUnit); // activate the texture unit first before binding texture
+            glBindTexture(GL_TEXTURE_2D, texture);
         }
 
 };
