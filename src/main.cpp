@@ -6,10 +6,13 @@
 #include <iostream>
 
 #include <custom/shaderClass.h>
+#include <custom/texture2D.h>
+
 #include <filesystem>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <STB/stb_image.h>
+
 
 
 void error_callback(int error, const char* description);
@@ -156,33 +159,69 @@ int main(int argc, char *argv[]){
         //-------------------------------------------------------------------------------
 
         //set our parameters for texture loading
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         int width, height, nrChannels;
-        unsigned char *data = stbi_load((currentPath + "assets/wall.jpg").c_str(), &width, &height, &nrChannels, 0);
+        unsigned char *data = stbi_load((currentPath + "assets/container.jpg").c_str(), &width, &height, &nrChannels, 0);
 
-        //generate and bind texture
-        unsigned int texture;
-        glGenTextures(1,&texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
 
-        //actually generate the texture and make its mipmap
-        if(data){
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+            //generate and bind texture
+            unsigned int texture,texture2;
+            glGenTextures(1,&texture);
+            glBindTexture(GL_TEXTURE_2D, texture);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            //actually generate the texture and make its mipmap
+            if(data){
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            } else {
+                std::cout << "Texture failed to load";
+            }
+            stbi_image_free(data);
+
+            stbi_set_flip_vertically_on_load(true);
+            data = stbi_load((currentPath + "assets/awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
+
+            //Generate and bind texture 2
+
+            glGenTextures(1, &texture2);
+            glBindTexture(GL_TEXTURE_2D, texture2);
+            // set the texture wrapping parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            // set texture filtering parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
         } else {
-            std::cout << "Texture failed to load";
+            std::cout << "Texture2 failed to load";
         }
-        stbi_image_free(data);
+            stbi_image_free(data);
 
 
+
+        // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
+        // -------------------------------------------------------------------------------------------
+        ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
+        // either set it manually like so:
+        glUniform1i(glGetUniformLocation(ourShader.shaderProgramID, "texture1"), 0);
+        // or set it via the texture class
+        ourShader.setInt("texture2", 1);
 
         //---------------------------------------------------------------------------------------
         //Render Loop
+        float opacity = 0.2f;
         while(!glfwWindowShouldClose(window))
         {
             //input
@@ -207,8 +246,27 @@ int main(int argc, char *argv[]){
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT);
 
+            if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+                opacity -= 0.05;
+            }
+
+            if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+                opacity += 0.05;
+            }
+
+            if(glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
+                opacity = 0.2;
+            }
+
+
+            glUniform1f(glGetUniformLocation(ourShader.shaderProgramID,"meow"),opacity);
+
             glActiveTexture(GL_TEXTURE0); // activate the texture unit first before binding texture
             glBindTexture(GL_TEXTURE_2D, texture);
+
+
+            glActiveTexture(GL_TEXTURE1); // activate the texture unit first before binding texture
+            glBindTexture(GL_TEXTURE_2D, texture2);
 
             glBindVertexArray(VAO);
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -256,6 +314,7 @@ bool initGlad(){
 
 void processInput(GLFWwindow *window)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
+    }
 }
