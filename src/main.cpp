@@ -276,7 +276,7 @@ int main(int argc, char *argv[]){
             projection    = glm::mat4(1.0f);
 
             //rotate the model 55 degrees around the x axis
-            //model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
             //move the world forward 3 units
             view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 
