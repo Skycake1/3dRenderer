@@ -1,6 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "glm/ext/matrix_float4x4.hpp"
 #include <glad/glad.h> // include glad to get all the required OpenGL headers
 
 #include <string>
@@ -120,6 +121,10 @@ public:
     {
         glUniform1f(glGetUniformLocation(shaderProgramID,name.c_str()), value);
 
+    }
+       void setMat4(const std::string &name, const glm::mat4 &mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(shaderProgramID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
     }
 
 

@@ -1,3 +1,5 @@
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
 #include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -14,16 +16,21 @@
 #include <STB/stb_image.h>
 
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 void error_callback(int error, const char* description);
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight);
 
 bool initGlad();
 void processInput(GLFWwindow *window);
 
-const int width = 640;
-const int height = 480;
+const int scrWidth = 640;
+const int scrHeight = 480;
 
 unsigned int vertexShader;
 unsigned int fragmentShader;
@@ -62,7 +69,7 @@ int main(int argc, char *argv[]){
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
         //this creates a pointer to our window and then checks if the window was created correctly
-        GLFWwindow* window = glfwCreateWindow(width, height, "Yo!", nullptr, nullptr);
+        GLFWwindow* window = glfwCreateWindow(scrWidth, scrHeight, "Yo!", nullptr, nullptr);
         if(window != nullptr)
         {
             std::cout << "window created successfully \n";
@@ -84,7 +91,7 @@ int main(int argc, char *argv[]){
         }
 
         //basically our canvas size, and we want it to be the same as the window size
-        glViewport(0, 0, width, height);
+        glViewport(0, 0, scrWidth, scrHeight);
         //which is why we setup our callback function right here
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
@@ -95,15 +102,48 @@ int main(int argc, char *argv[]){
 
         const float colorScale = 255.0f;
 
-        const float vertices[] = {
-            //Position                      //Colours
+        float vertices[] = {
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-                // positions          // colors           // texture coords
-             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
 
         unsigned int indices[] = {
@@ -133,25 +173,31 @@ int main(int argc, char *argv[]){
 
         glGenVertexArrays(1, &VAO);
         glGenBuffers(1, &VBO);
-        glGenBuffers(1,&EBO);
+        //glGenBuffers(1,&EBO);
 
         glBindVertexArray(VAO);
+
+
 
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+        /*
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+*/
         // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+        /*
         // color attribute
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
         glEnableVertexAttribArray(1);
-        // texture coord attribute
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-        glEnableVertexAttribArray(2);
+        */
+         // texture coord attribute
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+        glEnableVertexAttribArray(1);
+
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -179,8 +225,20 @@ int main(int argc, char *argv[]){
         ourShader.setInt("texture2", 1);
 
         //---------------------------------------------------------------------------------------
+
+            //translation stuffs
+
+        glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        glm::mat4 view          = glm::mat4(1.0f);
+        glm::mat4 projection    = glm::mat4(1.0f);
+
+
+        unsigned int modelLoc;
+        unsigned int viewLoc;
+
         //Render Loop
         float opacity = 0.2f;
+        unsigned int transformLoc;
         while(!glfwWindowShouldClose(window))
         {
             //input
@@ -188,14 +246,7 @@ int main(int argc, char *argv[]){
 
             //Rendering Commands Here
 
-            float time = glfwGetTime();
-            float xOffset = sin(time)/2;
-            float yOffset = cos(time)/2;
-            float zOffset = 0;
 
-            ourShader.setFloat("xOffset", xOffset);
-            ourShader.setFloat("yOffset", yOffset);
-            ourShader.setFloat("zOffset", zOffset);
 
             ourShader.use();
 
@@ -218,13 +269,40 @@ int main(int argc, char *argv[]){
             }
 
 
-            glUniform1f(glGetUniformLocation(ourShader.shaderProgramID,"meow"),opacity);
+            //Matrix transformations
 
+            model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+            view          = glm::mat4(1.0f);
+            projection    = glm::mat4(1.0f);
+
+            //rotate the model 55 degrees around the x axis
+            //model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+            //move the world forward 3 units
+            view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+            //define our projetion matrix
+            projection = glm::perspective(glm::radians(45.0f), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
+
+
+            modelLoc = glad_glGetUniformLocation(ourShader.shaderProgramID, "model");
+            viewLoc = glad_glGetUniformLocation(ourShader.shaderProgramID, "view");
+
+            //first way to pass to shaders
+            glUniformMatrix4fv(modelLoc,1,GL_FALSE, glm::value_ptr(model));
+            //second way
+            glUniformMatrix4fv(viewLoc,1,GL_FALSE, &view[0][0]);
+            //third way
+            ourShader.setMat4("projection", projection);
+
+            ourShader.setFloat("opacity", opacity);
             container.useTexture(GL_TEXTURE0);
             awesomeFace.useTexture(GL_TEXTURE1);
 
+
+
             glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
 
@@ -237,7 +315,7 @@ int main(int argc, char *argv[]){
            // ------------------------------------------------------------------------
             glDeleteVertexArrays(1, &VAO);
             glDeleteBuffers(1, &VBO);
-            glDeleteBuffers(1, &EBO);
+            //glDeleteBuffers(1, &EBO);
             glDeleteProgram(ourShader.shaderProgramID);
 
         std::cout<< "\n-----------------------------------------------------------\n";
@@ -251,9 +329,9 @@ void error_callback(int error, const char* description){
     std::cerr << "Error: " << description << "\n";
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight)
 {
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, scrWidth, scrHeight);
 }
 
 bool initGlad(){
