@@ -29,8 +29,8 @@ void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight);
 bool initGlad();
 void processInput(GLFWwindow *window);
 
-const int scrWidth = 640;
-const int scrHeight = 480;
+const int scrWidth = 800;
+const int scrHeight = 600;
 
 unsigned int vertexShader;
 unsigned int fragmentShader;
@@ -206,13 +206,14 @@ int main(int argc, char *argv[]){
 
         //set our parameters for texture loading
 
+        stbi_set_flip_vertically_on_load(true);
+
         int width, height, nrChannels;
 
         Texture2D container(width,height,nrChannels,0,(currentPath + "assets/container.jpg"));
         container.initTexture(GL_MIRRORED_REPEAT, GL_RGB);
 
         Texture2D awesomeFace(width,height,nrChannels,0,(currentPath + "assets/awesomeface.png"));
-        stbi_set_flip_vertically_on_load(true);
         awesomeFace.initTexture(GL_REPEAT, GL_RGBA);
 
 
