@@ -1,3 +1,4 @@
+#include "custom/camera.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include <cmath>
@@ -7,8 +8,8 @@
 
 #include <iostream>
 
-#include <custom/shaderClass.h>
-#include <custom/texture2D.h>
+#include <custom/shaderClass.hpp>
+#include <custom/texture2D.hpp>
 
 #include <filesystem>
 
@@ -29,11 +30,18 @@ void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight);
 bool initGlad();
 void processInput(GLFWwindow *window);
 
+Camera camera;
+
 const int scrWidth = 800;
 const int scrHeight = 600;
 
+float deltaTime = 0.0f;	// Time between current frame and last frame
+float lastFrame = 0.0f;
+
 unsigned int vertexShader;
 unsigned int fragmentShader;
+
+float cameraSpeed = 0;
 
 std::string currentPath = std::filesystem::current_path();
 
@@ -225,7 +233,7 @@ int main(int argc, char *argv[]){
         int width, height, nrChannels;
 
         Texture2D container(width,height,nrChannels,0,(currentPath + "assets/container.jpg"));
-        container.initTexture(GL_MIRRORED_REPEAT, GL_RGB);
+        container.initTexture(GL_REPEAT, GL_RGB);
 
         Texture2D awesomeFace(width,height,nrChannels,0,(currentPath + "assets/awesomeface.png"));
         awesomeFace.initTexture(GL_REPEAT, GL_RGBA);
@@ -243,26 +251,27 @@ int main(int argc, char *argv[]){
 
             //translation stuffs
 
+
+
         glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
 
-
         unsigned int modelLoc;
         unsigned int viewLoc;
-
-        //Render Loop
-        float opacity = 0.2f;
         unsigned int transformLoc;
+
         while(!glfwWindowShouldClose(window))
         {
             //input
             processInput(window);
-
             //Rendering Commands Here
 
+            float currentFrame = glfwGetTime();
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
 
-
+            cameraSpeed = 2.5f * deltaTime;
             ourShader.use();
 
 
@@ -270,17 +279,6 @@ int main(int argc, char *argv[]){
             //clear colour goes first because otheriwse it covers the screen
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-                opacity -= 0.05;
-            }
-
-            if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-                opacity += 0.05;
-            }
-
-            if(glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS){
-                opacity = 0.2;
-            }
 
 
             //Matrix transformations
@@ -289,30 +287,39 @@ int main(int argc, char *argv[]){
             view          = glm::mat4(1.0f);
             projection    = glm::mat4(1.0f);
 
+            camera.getViewMatrix();
+
+
             //rotate the model 55 degrees around the x axis
             model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-            //move the world forward 3 units
-            view  = glm::translate(view, glm::vec3(0.0f, 0.0f, -5.0f));
+            //move the world forward 5 units
+           // view  = camera.getViewMatrix();
 
             //define our projetion matrix
             projection = glm::perspective(glm::radians(45.0f), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
+            ourShader.setMat4("projection", projection);
 
+            view = glm::lookAt(camera.getPos(), (camera.getPos() + camera.getFront()), camera.getUp());
+            ourShader.setMat4("view", view);
 
-            modelLoc = glad_glGetUniformLocation(ourShader.shaderProgramID, "model");
-            viewLoc = glad_glGetUniformLocation(ourShader.shaderProgramID, "view");
+            modelLoc = glGetUniformLocation(ourShader.shaderProgramID, "model");
+            viewLoc = glGetUniformLocation(ourShader.shaderProgramID, "view");
 
             //first way to pass to shaders
             glUniformMatrix4fv(modelLoc,1,GL_FALSE, glm::value_ptr(model));
             //second way
             glUniformMatrix4fv(viewLoc,1,GL_FALSE, &view[0][0]);
             //third way
-            ourShader.setMat4("projection", projection);
 
-            ourShader.setFloat("opacity", opacity);
+            ourShader.setFloat("opacity", 0.2);
             container.useTexture(GL_TEXTURE0);
             awesomeFace.useTexture(GL_TEXTURE1);
 
+            const float radius = 10.0f;
+            float camX = sin(glfwGetTime()) * radius;
+            float camZ = cos(glfwGetTime()) * radius;
 
+            //camera.updatePos(glm::vec3(camX,0,camZ));
 
             glBindVertexArray(VAO);
             for(unsigned int i = 0; i < 10; i++)
@@ -320,14 +327,14 @@ int main(int argc, char *argv[]){
                 model = glm::mat4(1.0f);
                 model = glm::translate(model, cubePositions[i]);
                 float angle = 20.0f * i;
-                angle += sin(glfwGetTime())*40.0f;
+                angle += sin(glfwGetTime())*90.0f;
 
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
                 ourShader.setMat4("model", model);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
 
-            }            //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+            }
 
 
 
@@ -375,4 +382,14 @@ void processInput(GLFWwindow *window)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS){
         glfwSetWindowShouldClose(window, true);
     }
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.updatePos(camera.getPos() + cameraSpeed * camera.getFront());
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.updatePos(camera.getPos() - cameraSpeed * camera.getFront());
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.updatePos(camera.getPos() - glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.updatePos(camera.getPos() + glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
+
 }
