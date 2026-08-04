@@ -1,6 +1,7 @@
 #include "custom/camera.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/geometric.hpp"
 #include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -29,11 +30,15 @@ void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight);
 
 bool initGlad();
 void processInput(GLFWwindow *window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 Camera camera;
 
-const int scrWidth = 800;
-const int scrHeight = 600;
+const int scrWidth = 1920;
+const int scrHeight = 1080;
+
+float lastX = (float)scrWidth/2, lastY = (float)scrHeight/2;
+bool firstMouse = true;
 
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f;
@@ -111,10 +116,14 @@ int main(int argc, char *argv[]){
             std::cout << "GLAD intialized correctly" << std::endl;
         }
 
+
         //basically our canvas size, and we want it to be the same as the window size
         glViewport(0, 0, scrWidth, scrHeight);
         //which is why we setup our callback function right here
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+        glfwSetCursorPosCallback(window, mouse_callback);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
 
         //enable depth test
         glEnable(GL_DEPTH_TEST);
@@ -310,14 +319,11 @@ int main(int argc, char *argv[]){
             //second way
             glUniformMatrix4fv(viewLoc,1,GL_FALSE, &view[0][0]);
             //third way
+            ourShader.setFloat("offset", (float)sin(currentFrame));
 
             ourShader.setFloat("opacity", 0.2);
             container.useTexture(GL_TEXTURE0);
             awesomeFace.useTexture(GL_TEXTURE1);
-
-            const float radius = 10.0f;
-            float camX = sin(glfwGetTime()) * radius;
-            float camZ = cos(glfwGetTime()) * radius;
 
             //camera.updatePos(glm::vec3(camX,0,camZ));
 
@@ -392,4 +398,35 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.updatePos(camera.getPos() + glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
 
+}
+
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos;
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    camera.setYaw(camera.getYaw() + xoffset);
+    camera.setPitch(camera.getPitch() + yoffset);
+
+    if(camera.getPitch() > 89.0f)
+        camera.setPitch(89.0f);
+    if(camera.getPitch() < -89.0f)
+        camera.setPitch(-89.0f);
+
+    camera.updateAngles();
+    camera.setFront(glm::normalize(camera.getCameraAngle()));
 }
