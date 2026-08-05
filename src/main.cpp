@@ -31,8 +31,9 @@ void framebuffer_size_callback(GLFWwindow* window, int scrWidth, int scrHeight);
 bool initGlad();
 void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset,double yoffset);
 
-Camera camera;
+Camera camera(glm::vec3(0,0,5.0));
 
 const int scrWidth = 1920;
 const int scrHeight = 1080;
@@ -46,7 +47,7 @@ float lastFrame = 0.0f;
 unsigned int vertexShader;
 unsigned int fragmentShader;
 
-float cameraSpeed = 0;
+float cameraSpeed = 0.0f;
 
 std::string currentPath = std::filesystem::current_path();
 
@@ -122,6 +123,7 @@ int main(int argc, char *argv[]){
         //which is why we setup our callback function right here
         glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
         glfwSetCursorPosCallback(window, mouse_callback);
+        glfwSetScrollCallback(window, scroll_callback);
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 
@@ -237,7 +239,6 @@ int main(int argc, char *argv[]){
 
         //set our parameters for texture loading
 
-        stbi_set_flip_vertically_on_load(true);
 
         int width, height, nrChannels;
 
@@ -245,7 +246,7 @@ int main(int argc, char *argv[]){
         container.initTexture(GL_REPEAT, GL_RGB);
 
         Texture2D awesomeFace(width,height,nrChannels,0,(currentPath + "assets/awesomeface.png"));
-        awesomeFace.initTexture(GL_REPEAT, GL_RGBA);
+        awesomeFace.initTexture(GL_REPEAT, GL_RGBA, true);
 
 
         // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
@@ -266,84 +267,52 @@ int main(int argc, char *argv[]){
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
 
-        unsigned int modelLoc;
-        unsigned int viewLoc;
-        unsigned int transformLoc;
+
 
         while(!glfwWindowShouldClose(window))
         {
             //input
-            processInput(window);
             //Rendering Commands Here
 
-            float currentFrame = glfwGetTime();
+            float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
 
-            cameraSpeed = 2.5f * deltaTime;
-            ourShader.use();
+            cameraSpeed = 2.5 * deltaTime;
+
+            processInput(window);
 
 
-
-            //clear colour goes first because otheriwse it covers the screen
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-            //Matrix transformations
-
-            model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            view          = glm::mat4(1.0f);
-            projection    = glm::mat4(1.0f);
-
-            camera.getViewMatrix();
-
-
-            //rotate the model 55 degrees around the x axis
-            model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-            //move the world forward 5 units
-           // view  = camera.getViewMatrix();
-
-            //define our projetion matrix
-            projection = glm::perspective(glm::radians(45.0f), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
-            ourShader.setMat4("projection", projection);
-
-            view = glm::lookAt(camera.getPos(), (camera.getPos() + camera.getFront()), camera.getUp());
-            ourShader.setMat4("view", view);
-
-            modelLoc = glGetUniformLocation(ourShader.shaderProgramID, "model");
-            viewLoc = glGetUniformLocation(ourShader.shaderProgramID, "view");
-
-            //first way to pass to shaders
-            glUniformMatrix4fv(modelLoc,1,GL_FALSE, glm::value_ptr(model));
-            //second way
-            glUniformMatrix4fv(viewLoc,1,GL_FALSE, &view[0][0]);
-            //third way
-            ourShader.setFloat("offset", (float)sin(currentFrame));
-
-            ourShader.setFloat("opacity", 0.2);
             container.useTexture(GL_TEXTURE0);
             awesomeFace.useTexture(GL_TEXTURE1);
 
-            //camera.updatePos(glm::vec3(camX,0,camZ));
+            ourShader.use();
+
+            projection = glm::perspective(glm::radians(camera.getFov()), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
+            ourShader.setMat4("projection", projection);
+
+            view = camera.getViewMatrix();
+            ourShader.setMat4("view", view);
+
+            ourShader.setFloat("offset", (float)sin(currentFrame));
+            ourShader.setFloat("opacity", 0.2);
 
             glBindVertexArray(VAO);
             for(unsigned int i = 0; i < 10; i++)
             {
-                model = glm::mat4(1.0f);
-                model = glm::translate(model, cubePositions[i]);
-                float angle = 20.0f * i;
-                angle += sin(glfwGetTime())*90.0f;
-
-                model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-                ourShader.setMat4("model", model);
+            // calculate the model matrix for each object and pass it to shader before drawing
+            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+            model = glm::translate(model, cubePositions[i]);
+            float angle = 20.0f * i;
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            ourShader.setMat4("model", model);
 
                 glDrawArrays(GL_TRIANGLES, 0, 36);
 
             }
-
-
-
 
             //check and call events and swap buffers
             glfwSwapBuffers(window);
@@ -390,13 +359,13 @@ void processInput(GLFWwindow *window)
     }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.updatePos(camera.getPos() + cameraSpeed * camera.getFront());
+        camera.setPos(camera.getPos() + cameraSpeed * camera.getFront());
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.updatePos(camera.getPos() - cameraSpeed * camera.getFront());
+        camera.setPos(camera.getPos() - cameraSpeed * camera.getFront());
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.updatePos(camera.getPos() - glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
+        camera.setPos(camera.getPos() - glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.updatePos(camera.getPos() + glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
+        camera.setPos(camera.getPos() + glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
 
 }
 
@@ -412,21 +381,13 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 
     float xoffset = xpos - lastX;
     float yoffset = lastY - ypos;
+
     lastX = xpos;
     lastY = ypos;
 
-    float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
+    camera.processMouse(xoffset, yoffset);
+}
 
-    camera.setYaw(camera.getYaw() + xoffset);
-    camera.setPitch(camera.getPitch() + yoffset);
-
-    if(camera.getPitch() > 89.0f)
-        camera.setPitch(89.0f);
-    if(camera.getPitch() < -89.0f)
-        camera.setPitch(-89.0f);
-
-    camera.updateAngles();
-    camera.setFront(glm::normalize(camera.getCameraAngle()));
+void scroll_callback(GLFWwindow* window, double xoffset,double yoffset){
+    camera.processScroll(yoffset);
 }

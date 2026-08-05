@@ -38,6 +38,18 @@ class Texture2D{
         }
 
 
+        void initTexture(unsigned int edgecontrol, unsigned int internalFormat, bool flip){
+            stbi_set_flip_vertically_on_load(true);
+            data = stbi_load(filePath.c_str(), &width, &height, &nrChannels, reqComp);
+
+            genTextures();
+            setTexParameters(edgecontrol);
+            genMipmaps(internalFormat);
+            stbi_set_flip_vertically_on_load(false);
+
+        }
+
+
         void genTextures(){
             //generate and bind texture
             glGenTextures(1,&texture);

@@ -5,93 +5,150 @@
 #include "glm/ext/matrix_float4x4.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include <cmath>
+#include <iostream>
+#include <ostream>
+
+
+
+const float YAW = -90.0f;
+const float PITCH = 0.0f;
+const float ROLL = 0.0f;
+const float SPEED = 2.5f;
+const float SENS = 0.1f;
+const float ZOOM = 120.0f;
+
+
 
 class Camera{
 
+    glm::vec3 camPos;
+    glm::vec3 camFront;
+    glm::vec3 camUp;
+    glm::vec3 camRight;
+    glm::vec3 worldUp;
 
-    glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
-    glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-    glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    float Yaw;
+    float Pitch;
+    float Roll;
 
-    float roll = 0;
-    float pitch = 0;
-    float yaw = -90;
-
-    glm::mat4 view;
-
-    glm::vec3 direction;
+    float Sens;
+    float Fov;
 
     /*
     This is basically what the glm::lookAt function is doing to get a matrix we can use for translation/rotation n such
     //functionally our positive z axis
-    glm::vec3 cameraDirection = glm::normalize(cameraPos - cameraTarget);
+    glm::vec3 cameraDirection = glm::normalize(camPos - cameraTarget);
 
     //do a cross product with an up vector to get our right (positive X)
     glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
 
     //cross product again to get out positive y
-    glm::vec3 cameraUp = glm::cross(cameraDirection,cameraRight);
+    glm::vec3 camUp = glm::cross(cameraDirection,cameraRight);
     */
+
     public:
-    Camera(){
 
+    Camera(glm::vec3 startingPos = glm::vec3(0,0,0), glm::vec3 up = glm::vec3(0,1.0,0),float yaw = YAW, float pitch = PITCH, float roll = ROLL)
+        :
+        camFront(glm::vec3 (0,0,-1)),
+        Roll(ROLL),
+        Sens(SENS),
+        Fov(ZOOM)
+    {
+        std::cout << Sens << "\n";
+        camPos=startingPos;
+        worldUp = up;
+        Yaw = yaw;
+        Pitch = pitch;
+        Roll = roll;
 
+        updateCamVectors();
+    }
+
+    void processMouse(float xoffset,float yoffset){
+
+    xoffset *= Sens;
+    yoffset *= Sens;
+
+    setYaw(getYaw() + xoffset);
+    setPitch(getPitch() + yoffset);
+
+    if(getPitch() > 89.0f)
+        setPitch(89.0f);
+    if(getPitch() < -89.0f)
+        setPitch(-89.0f);
+
+    updateCamVectors();
+    }
+
+    void processScroll(float yOffset){
+        Fov -= (float)yOffset;
+        if (Fov < 1.0f)
+            Fov = 1.0f;
+        if (Fov > 120.0f)
+            Fov = 120.0f;
+    }
+
+    //setters
+
+    void setPos(glm::vec3 pos){
+        camPos = pos;
         getViewMatrix();
-
-        updateAngles();
     }
+    void setFront(glm::vec3 front2){camFront = front2;}
+    void setUp(glm::vec3 up){camUp = up;}
 
-    void updatePos(glm::vec3 pos){
-        cameraPos = pos;
-        getViewMatrix();
-    }
 
-    void updateAngles(){
+    void setPitch(float pitch2){Pitch = pitch2;}
+    void setYaw(float yaw2){Yaw = yaw2;}
+    void setRoll(float roll2){Roll = roll2;}
 
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        direction.y = sin(glm::radians(pitch));
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    }
+    //getters
 
-    void setAngles(glm::vec3 desiredAngles){
-        direction = desiredAngles;
-    }
+    float getPitch(){return Pitch;}
+    float getYaw(){return Yaw;}
+    float getRoll(){return Roll;}
 
-    void setFront(glm::vec3 front2){cameraFront = front2;}
+    float getFov(){return Fov;}
 
-    void setPitch(float pitch2){pitch = pitch2;}
-    void setYaw(float yaw2){yaw = yaw2;}
-    void setRoll(float roll2){roll = roll2;}
+    glm::vec3 getPos(){return camPos;}
+    glm::vec3 getFront(){return camFront;}
+    glm::vec3 getUp(){return camUp;}
 
-    float getPitch(){return pitch;}
-    float getYaw(){return yaw;}
-    float getRoll(){return roll;}
-
-    glm::vec3 getCameraAngle(){
-        return direction;
-    }
-
-    glm::vec3 getPos(){
-        return cameraPos;
-    }
-
-    glm::vec3 getFront(){
-        return cameraFront;
-    }
-
-    glm::vec3 getUp(){
-        return cameraUp;
-    }
 
     glm::mat4 getViewMatrix(){
-        return view = glm::lookAt(
-        cameraPos,
-  	    cameraPos + cameraFront,
-  	    cameraUp);
+        return glm::lookAt(
+        camPos,
+  	    camPos + camFront,
+  	    camUp);
     }
 
 
     private:
+
+    void updateCamVectors(){
+        glm::vec3 front;
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.y = sin(glm::radians(Pitch));
+        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        camFront = glm::normalize(front);
+        // also re-calculate the Right and Up vector
+        camRight = glm::normalize(glm::cross(camFront, worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+        camUp    = glm::normalize(glm::cross(camRight, camFront));
+    }
+
+    void updateCamVectorsPlane(){
+    // calculate the new Front vector
+        glm::vec3 front;
+        front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        front.y = sin(glm::radians(Pitch));
+        front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+        camFront = glm::normalize(front);
+        // also re-calculate the Right and Up vector
+        camRight = glm::normalize(glm::cross(camFront, worldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+        camUp    = glm::normalize(glm::cross(camRight, camFront));
+    }
 
 };
 #endif
