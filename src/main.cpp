@@ -51,6 +51,8 @@ float cameraSpeed = 0.0f;
 
 std::string currentPath = std::filesystem::current_path();
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+
 
 glm::vec3 cubePositions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f),
@@ -131,53 +133,52 @@ int main(int argc, char *argv[]){
         glEnable(GL_DEPTH_TEST);
         //shader setup
 
-        Shader ourShader((currentPath + "shaders/vertex/vertexShader.vs").c_str(),(currentPath+ "shaders/fragment/fragmentShader.fs").c_str());
-
+        Shader lightShader((currentPath + "shaders/vertex/vertexShader.vert").c_str(),(currentPath+ "shaders/fragment/fragmentShader.frag").c_str());
+        Shader lightSourceShader((currentPath + "shaders/vertex/lightSourceShader.vert").c_str(),(currentPath+ "shaders/fragment/lightSourceShader.frag").c_str());
         const float colorScale = 255.0f;
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
 
-        float vertices[] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
 
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
 
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
 
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
+        -0.5f, -0.5f, -0.5f,
 
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-        };
+        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,
+    };
 
         unsigned int indices[] = {
 
@@ -201,35 +202,30 @@ int main(int argc, char *argv[]){
         //(eg: a square is made of 2 triangles and we don't wanna waste resources drawing the second half of them)
 
         //basically, raw corner data, how to confiure those corners and their state, and a best way to draw them
-        unsigned int VBO, VAO,EBO;
+         // first, configure the cube's VAO (and VBO)
+    unsigned int VBO, cubeVAO;
+    glGenVertexArrays(1, &cubeVAO);
+    glGenBuffers(1, &VBO);
 
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-        //glGenBuffers(1,&EBO);
+    glBindVertexArray(cubeVAO);
 
-        glBindVertexArray(VAO);
+    // position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
+    // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
+    unsigned int lightCubeVAO;
+    glGenVertexArrays(1, &lightCubeVAO);
+    glBindVertexArray(lightCubeVAO);
 
+    // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        /*
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-*/
-        // position attribute
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-        /*
-        // color attribute
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
-        */
-         // texture coord attribute
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -251,11 +247,8 @@ int main(int argc, char *argv[]){
 
         // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
         // -------------------------------------------------------------------------------------------
-        ourShader.use(); // don't forget to activate/use the shader before setting uniforms!
+        lightShader.use(); // don't forget to activate/use the shader before setting uniforms!
         // either set it manually like so:
-        glUniform1i(glGetUniformLocation(ourShader.shaderProgramID, "texture1"), 0);
-        // or set it via the texture class
-        ourShader.setInt("texture2", 1);
 
         //---------------------------------------------------------------------------------------
 
@@ -286,33 +279,39 @@ int main(int argc, char *argv[]){
             glClearColor( 0.16f, 0.01f, 0.11f, 0.5f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            container.useTexture(GL_TEXTURE0);
-            awesomeFace.useTexture(GL_TEXTURE1);
+            //shaders goes here
+            // don’t forget to use the corresponding shader program first
+            lightShader.use();
+            lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+            lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
-            ourShader.use();
 
             projection = glm::perspective(glm::radians(camera.getFov()), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
-            ourShader.setMat4("projection", projection);
+            lightShader.setMat4("projection", projection);
 
             view = camera.getViewMatrix();
-            ourShader.setMat4("view", view);
+            lightShader.setMat4("view", view);
 
-            ourShader.setFloat("offset", (float)sin(currentFrame));
-            ourShader.setFloat("opacity", 0.2);
+            glm::mat4 model = glm::mat4(1.0f);
+            lightShader.setMat4("model", model);
 
-            glBindVertexArray(VAO);
-            for(unsigned int i = 0; i < 10; i++)
-            {
-            // calculate the model matrix for each object and pass it to shader before drawing
-            glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-            model = glm::translate(model, cubePositions[i]);
-            float angle = 20.0f * i;
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            ourShader.setMat4("model", model);
+            glBindVertexArray(cubeVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
 
-                glDrawArrays(GL_TRIANGLES, 0, 36);
+                   // also draw the lamp object
+            lightSourceShader.use();
+            lightSourceShader.setMat4("projection", projection);
+            lightSourceShader.setMat4("view", view);
 
-            }
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, lightPos);
+            model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+
+            lightSourceShader.setMat4("model", model);
+
+            glBindVertexArray(lightCubeVAO);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+
 
             //check and call events and swap buffers
             glfwSwapBuffers(window);
@@ -320,10 +319,11 @@ int main(int argc, char *argv[]){
         }
 
            // ------------------------------------------------------------------------
-            glDeleteVertexArrays(1, &VAO);
+            glDeleteVertexArrays(1, &cubeVAO);
+            glDeleteVertexArrays(1, &lightCubeVAO);
             glDeleteBuffers(1, &VBO);
             //glDeleteBuffers(1, &EBO);
-            glDeleteProgram(ourShader.shaderProgramID);
+            glDeleteProgram(lightShader.shaderProgramID);
 
         std::cout<< "\n-----------------------------------------------------------\n";
         glfwTerminate();
