@@ -1,5 +1,7 @@
 #include "custom/camera.hpp"
+#include "glm/exponential.hpp"
 #include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/scalar_constants.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 #include <cmath>
@@ -67,7 +69,7 @@ glm::vec3 cubePositions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 
-
+bool meow = true;
 
 int main(int argc, char *argv[]){
 
@@ -137,49 +139,48 @@ int main(int argc, char *argv[]){
         Shader lightSourceShader((currentPath + "shaders/vertex/lightSourceShader.vert").c_str(),(currentPath+ "shaders/fragment/lightSourceShader.frag").c_str());
         const float colorScale = 255.0f;
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
 
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
-    };
-
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+};
         unsigned int indices[] = {
 
             0, 1, 3, // first triangle
@@ -213,9 +214,11 @@ int main(int argc, char *argv[]){
     glBindVertexArray(cubeVAO);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-
+    //normal vectors
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
     // second, configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
     unsigned int lightCubeVAO;
     glGenVertexArrays(1, &lightCubeVAO);
@@ -224,7 +227,7 @@ int main(int argc, char *argv[]){
     // we only need to bind to the VBO (to link it with glVertexAttribPointer), no need to fill it; the VBO's data already contains all we need (it's already bound, but we do it again for educational purposes)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
 
@@ -245,27 +248,32 @@ int main(int argc, char *argv[]){
         awesomeFace.initTexture(GL_REPEAT, GL_RGBA, true);
 
 
-        // tell opengl for each sampler to which texture unit it belongs to (only has to be done once)
-        // -------------------------------------------------------------------------------------------
-        lightShader.use(); // don't forget to activate/use the shader before setting uniforms!
-        // either set it manually like so:
-
-        //---------------------------------------------------------------------------------------
-
-            //translation stuffs
-
-
-
         glm::mat4 model         = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
         glm::mat4 view          = glm::mat4(1.0f);
         glm::mat4 projection    = glm::mat4(1.0f);
 
+        float origin = 0;
+        float r(
 
+            glm::sqrt(
+            pow(lightPos.x-origin,2)
+            + pow(lightPos.y-origin, 2)
+            + pow(lightPos.z-origin, 2)
+            )
+    );
 
+        int i = 0;
         while(!glfwWindowShouldClose(window))
         {
             //input
             //Rendering Commands Here
+            float angle = 2.0f *(float) glm::pi<float>() * i/360;
+            float x = (float) cos(angle) * r;
+            float z = (float) sin(angle) * r;
+
+            lightPos.x = x;
+            lightPos.z = z;
+
 
             float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
@@ -284,6 +292,7 @@ int main(int argc, char *argv[]){
             lightShader.use();
             lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
             lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+            lightShader.setVec3("lightPos", lightPos);
 
 
             projection = glm::perspective(glm::radians(camera.getFov()), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
@@ -295,6 +304,9 @@ int main(int argc, char *argv[]){
             glm::mat4 model = glm::mat4(1.0f);
             lightShader.setMat4("model", model);
 
+
+
+
             glBindVertexArray(cubeVAO);
             glDrawArrays(GL_TRIANGLES, 0, 36);
 
@@ -303,11 +315,17 @@ int main(int argc, char *argv[]){
             lightSourceShader.setMat4("projection", projection);
             lightSourceShader.setMat4("view", view);
 
+
             model = glm::mat4(1.0f);
             model = glm::translate(model, lightPos);
             model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 
             lightSourceShader.setMat4("model", model);
+
+            if(i >= 360){
+                i = 0;
+            }
+            i++;
 
             glBindVertexArray(lightCubeVAO);
             glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -366,7 +384,10 @@ void processInput(GLFWwindow *window)
         camera.setPos(camera.getPos() - glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         camera.setPos(camera.getPos() + glm::normalize(glm::cross(camera.getFront(), camera.getUp()))* cameraSpeed);
-
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.setPos(camera.getPos() + cameraSpeed * camera.getUp());
+    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.setPos(camera.getPos() - cameraSpeed * camera.getUp());
 }
 
 
