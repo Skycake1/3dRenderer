@@ -293,6 +293,7 @@ int main(int argc, char *argv[]){
             lightShader.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
             lightShader.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
             lightShader.setVec3("lightPos", lightPos);
+            lightShader.setVec3("viewPos", camera.getPos());
 
 
             projection = glm::perspective(glm::radians(camera.getFov()), (float)scrWidth / (float)scrHeight , 0.1f, 100.0f);
