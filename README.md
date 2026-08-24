@@ -3,4 +3,6 @@
 
 This is a simple little project that mainly exists so I can learn how to use opengl, originally I wanted it to be a game engine and then I realised how crazy in scope that is.
 
+I am currently implementing basic lighting and going further from there
+
 
