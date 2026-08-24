@@ -53,7 +53,7 @@ float cameraSpeed = 0.0f;
 
 std::string currentPath = std::filesystem::current_path();
 
-glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightPos(1.2f, 0.55f, 2.0f);
 
 
 glm::vec3 cubePositions[] = {
@@ -413,3 +413,5 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 void scroll_callback(GLFWwindow* window, double xoffset,double yoffset){
     camera.processScroll(yoffset);
 }
+
+// I wrote this comment in nvim!
